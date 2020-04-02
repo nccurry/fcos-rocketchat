@@ -1,0 +1,30 @@
+[Unit]
+Description=MongoDB
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Restart=on-failure
+ExecStartPre=/usr/bin/rm -f /%t/%n-pid /%t/%n-cid
+ExecStart=/usr/bin/podman \
+            run \
+            --conmon-pidfile /%t/%n-pid \
+            --cidfile /%t/%n-cid \
+            -d \
+            --ip {{ mongodb_cni_ip }} \
+            -e MONGODB_USERNAME={{ mongodb_username }} \
+            -e MONGODB_PASSWORD={{ mongodb_password }} \
+            -e MONGODB_DATABASE=rocketchat \
+            -e MONGODB_ROOT_PASSWORD={{ mongodb_root_password }} \
+            -e MONGODB_REPLICA_SET_MODE=primary \
+            -e MONGODB_REPLICA_SET_NAME=rs0 \
+            -e MONGODB_REPLICA_SET_KEY=keysetreplicamongodb \
+            -v /var/bitnami:/bitnami:Z \
+            bitnami/mongodb:{{ mongodb_image_tag }}
+ExecStop=/usr/bin/podman rm -f --cidfile /%t/%n-cid
+KillMode=none
+Type=forking
+PIDFile=/%t/%n-pid
+
+[Install]
+WantedBy=multi-user.target

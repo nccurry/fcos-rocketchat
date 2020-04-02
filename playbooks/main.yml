@@ -1,0 +1,22 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Administer Rocket Chat
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+  - "{{ playbook_dir }}/../defaults/main.yml"
+  tasks:
+  - name: Create ssh directory
+    file:
+      state: directory
+      path: "{{ lookup('env', 'HOME') }}/.ssh"
+
+  - name: Generate ssh keypair
+    openssh_keypair:
+      path: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
+      mode: 0400
+    register: ssh_key
+
+  - name: Deploy virtual machine
+    import_role:
+      name: libvirt_coreos_vm

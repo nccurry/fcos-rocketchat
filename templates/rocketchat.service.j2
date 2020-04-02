@@ -1,0 +1,26 @@
+[Unit]
+Description=Rocket Chat
+After=network-online.target
+Wants=network-online.target
+After=mongodb.service
+
+[Service]
+Restart=on-failure
+ExecStartPre=/usr/bin/rm -f /%t/%n-pid /%t/%n-cid
+ExecStart=/usr/bin/podman \
+            run \
+            --conmon-pidfile /%t/%n-pid \
+            --cidfile /%t/%n-cid \
+            -d \
+            --ip {{ rocketchat_cni_ip }} \
+            -e MONGO_URL='mongodb://{{ mongodb_username }}:{{ mongodb_password }}@{{ mongodb_cni_ip }}:27017/rocketchat' \
+            -e MONGO_OPLOG_URL='mongodb://root:{{ mongodb_root_password }}@{{ mongodb_cni_ip }}:27017/local?replicaSet=rs0&authSource=admin' \
+            -e ROOT_URL='{{ rocketchat_root_url }}' \
+            rocket.chat:{{ rocketchat_image_tag }}
+ExecStop=/usr/bin/podman rm -f --cidfile /%t/%n-cid
+KillMode=none
+Type=forking
+PIDFile=/%t/%n-pid
+
+[Install]
+WantedBy=multi-user.target

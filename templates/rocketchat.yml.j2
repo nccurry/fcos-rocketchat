@@ -1,0 +1,11 @@
+http:
+  routers:
+    to-rocketchat:
+      service: rocketchat
+      rule: HostRegexp(`{all:.*}`)
+
+  services:
+    rocketchat:
+      loadBalancer:
+        servers:
+        - url: "http://{{ rocketchat_cni_ip }}:3000"
